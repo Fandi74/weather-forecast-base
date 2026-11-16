@@ -1,0 +1,66 @@
+{
+  "data": "fully synthetic forecasts and observations; no real station or company data",
+  "gap_hours": 24,
+  "generated_records": 2160,
+  "seed": 83021,
+  "selection": "minimum validation MAE per target; ties choose lower alpha; no refit on validation",
+  "splits": {
+    "test": {
+      "count": 408,
+      "first_valid_hour": 1776,
+      "last_valid_hour": 2183
+    },
+    "train": {
+      "count": 1296,
+      "first_valid_hour": 24,
+      "last_valid_hour": 1319
+    },
+    "validation": {
+      "count": 408,
+      "first_valid_hour": 1344,
+      "last_valid_hour": 1751
+    }
+  },
+  "test": {
+    "humidity": {
+      "mean_bias": {
+        "bias": -0.3578550799025042,
+        "count": 408,
+        "mae": 4.235888044583809,
+        "rmse": 5.073415899689518
+      },
+      "raw": {
+        "bias": -7.139222872552027,
+        "count": 408,
+        "mae": 7.355769126972459,
+        "rmse": 8.750999477601423
+      },
+      "ridge": {
+        "bias": -0.36874470178327085,
+        "count": 408,
+        "mae": 1.5207182781626067,
+        "rmse": 1.909910170033105
+      }
+    },
+    "temperature": {
+      "mean_bias": {
+        "bias": -0.0352587353316684,
+        "count": 408,
+        "mae": 1.2856513868782908,
+        "rmse": 1.556023175274566
+      },
+      "raw": {
+        "bias": 2.4158657427191144,
+        "count": 408,
+        "mae": 2.4539613275938135,
+        "rmse": 2.873390372089761
+      },
+      "ridge": {
+        "bias": 0.22618140486602814,
+        "count": 408,
+        "mae": 0.6083545283023658,
+        "rmse": 0.7591628416476388
+      }
+    }
+  }
+}

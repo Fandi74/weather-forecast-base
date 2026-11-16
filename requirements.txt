@@ -1,0 +1,4 @@
+# Numerical training and verification use the Python standard library.
+# These dependencies are needed only to regenerate PNG plots.
+matplotlib==3.11.2
+numpy==2.5.4

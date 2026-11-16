@@ -1,0 +1,1 @@
+"""Independent synthetic forecasting demonstration."""
