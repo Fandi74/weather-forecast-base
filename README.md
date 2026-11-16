@@ -44,19 +44,81 @@ This diagram describes a general engineering pattern. It does not disclose deplo
 | Evaluation | Score each variable, horizon, and supported location separately |
 | Release decision | Prefer a candidate only where improvement and coverage are supported |
 
-## Engineering contributions
+## My engineering contribution
 
-The engineering work represented by this case study centered on:
+My contribution was to organize the forecasting work as a sequence of testable engineering decisions: establish a baseline, isolate a candidate change, inspect its behavior, and decide where the evidence supports using it.
 
-- Establishing a versioned baseline and evaluating separate candidates against the same observations.
-- Exploring tree-based regression and ensemble corrections while treating temperature, humidity, and rainfall as distinct tasks.
-- Aligning forecasts and observations and making observation-availability assumptions explicit.
-- Comparing nearby sensors as contextual evidence while recognizing that their measurements are not interchangeable.
-- Examining soil wetting as supplementary rainfall context and distinguishing possible rain from irrigation or fertigation.
-- Building overlapping forecast–observation plots to inspect timing, systematic bias, and missed events.
-- Separating development diagnostics from claims that would require unseen validation data.
+### What I designed
 
-These contributions describe methodology and engineering decisions. Company-owned implementations, trained artifacts, measurements, identifiers, and unpublished quantitative findings are outside this portfolio.
+- **A baseline-and-candidate workflow.** I kept a reference forecast fixed while investigating separate model candidates, so changing the model would not silently change the comparison.
+- **Separate treatment of forecast variables.** I scoped humidity and rainfall improvements separately and retained the temperature baseline while investigating those changes.
+- **A composition strategy.** I combined selected variable-specific approaches into a common forecast output while keeping unsupported cases on a baseline or fallback path.
+- **An observation comparison strategy.** I used nearby sensors as supplementary context and investigated soil wetting as a possible rainfall signal, with explicit attention to irrigation and fertigation ambiguity.
+
+### What I implemented
+
+- Forecast–observation comparison workflows with explicit sensor-reference choices, timestamp alignment, and missing-data handling.
+- Candidate training and prediction workflows using tree-based learners and humidity ensemble combinations.
+- Composition of humidity and rainfall candidates with the retained temperature baseline.
+- Evaluation summaries and overlapping plots of observations, baseline forecasts, and candidate predictions.
+
+These implementations belong to the original research context. They are described here as my engineering experience; their company-owned code, weights, data, and internal artifacts are not part of this repository.
+
+### What I evaluated
+
+I compared baseline and candidate behavior for temperature, humidity, and rainfall separately. I inspected both aggregate errors and overlapping time-series plots to understand systematic bias, forecast timing, and missed events.
+
+For humidity, I investigated whether candidate models or an ensemble improved agreement with the selected observation reference. For rainfall, I examined event detection and amount prediction separately, including whether local and nearby sensor context could help explain wetting patterns.
+
+I also examined the limits of the evidence: observations already inspected during development, assumed observation delays, site-specific coverage, and inconsistent rainfall improvements. I did not treat an inspected diagnostic period as new blind validation or assume that a better score for one target established improvement for every target.
+
+### What I learned
+
+The most useful outcome was a clearer understanding of where apparent model gains can be misleading: reference-sensor choices affect the target, missing arrival timestamps leave availability uncertain, and dry-heavy rainfall accuracy can conceal missed rain. These findings shaped the evaluation and reporting decisions described below.
+
+No company-derived scores or unpublished quantitative findings are disclosed in this account.
+
+## Feature, model, and evaluation architecture
+
+I separated feature preparation, model candidates, and evaluation so that a modeling change could be examined without redefining the target or silently changing the evaluation cases.
+
+The following original diagram expresses that design reasoning at a conceptual level. It is not a deployment diagram or a claim that a complete independent implementation is available in this repository.
+
+```mermaid
+flowchart TD
+    A[Forecast and observation records] --> B[Time alignment and availability checks]
+    B --> C[Chronological train-validation-test split]
+    C --> T[Training records]
+    T --> E[Fit feature preparation on training only]
+    E --> S[Statistical correction baseline]
+    E --> M[ML correction candidates]
+    C --> V[Validation records]
+    E -. Apply training-fitted rules .-> V
+    S --> J[Compare on identical validation cases]
+    M --> J
+    V --> J
+    A --> R[Raw numerical forecast baseline]
+    R --> J
+    J --> F[Freeze candidate and baselines]
+    C --> H[Held-out test records]
+    E -. Apply training-fitted rules .-> H
+    F --> Q[One held-out comparison]
+    H --> Q
+    R --> Q
+    Q --> O[Per-target metrics and overlapping plots]
+```
+
+| Design choice | Reason |
+| --- | --- |
+| Availability checks before feature preparation | Prevent later sensor readings from entering an earlier prediction |
+| Forecast value, lead time, local time, and available observation history as feature families | Separate forecast context from local recent conditions without prescribing proprietary feature definitions |
+| Training-only fitting of feature rules and model parameters | Keep validation and test information out of fitting |
+| Statistical correction beside ML candidates | Make added complexity justify itself against a simpler correction |
+| A validation stage before freezing | Separate candidate selection from final held-out assessment |
+| Identical evaluation cases and explicit fallback coverage | Avoid attributing a change in coverage to a better model |
+| Per-target plots and metrics | Expose timing errors and variable-specific tradeoffs hidden by a single score |
+
+This is the reference architecture I would use for the independent portfolio example. The stronger held-out protocol shown here is an evaluation objective; it does not retroactively turn earlier development diagnostics into blind tests.
 
 ## Validation methodology
 
@@ -99,12 +161,51 @@ No company-derived scores, fitted parameters, measured examples, or original com
 
 ## Lessons learned
 
-1. Establish a trustworthy baseline before increasing model complexity.
-2. Resolve timestamp, availability, and sensor semantics before tuning a learner.
-3. Preserve an unseen test period; an inspected development period is not a blind benchmark.
-4. Treat rainfall occurrence, rainfall amount, and soil wetting as related but different questions.
-5. Make plots and metric definitions explicit so an apparent improvement can be checked.
-6. Keep engineering demonstrations separate from proprietary operational assets.
+1. **I learned to preserve the comparison before tuning the model.** A fixed baseline, target definition, and shared observation set make a candidate's behavior easier to interpret.
+2. **I learned that sensor semantics are part of the model specification.** Choosing a humidity reference or combining temperature readings changes what is being predicted and scored.
+3. **I learned to distinguish timestamps from availability.** Measurement times do not resolve when an operational prediction could actually access a reading.
+4. **I learned that rain needs more than a headline accuracy score.** Dry-dominated accuracy and ambiguous soil wetting can both give a misleading impression of useful rain detection.
+5. **I learned to qualify evidence.** Development plots and inspected diagnostics are useful for investigation, but an unseen evaluation is still needed for stronger performance claims.
+6. **I learned to separate engineering experience from publishable assets.** A portfolio can explain my decisions and limitations without reproducing company-owned materials.
+
+## Planned independent reproducible example
+
+**Status: planned; no executable example, training pipeline, or model artifact is included yet.**
+
+The next step is a small implementation written independently for this portfolio, using fictional station observations and a documented public weather forecast snapshot. It will not reuse company source files, weights, measurements, station settings, or internal research artifacts.
+
+The synthetic observations will be generated with controlled bias and noise for a repeatable learning exercise. They will not be represented as real station measurements. Public forecasts used alongside synthetic outcomes will not make the resulting evaluation a real-world accuracy benchmark.
+
+### Intended structure
+
+The paths below are a proposed layout, not files currently available in this repository.
+
+```text
+src/
+  synthetic_data.py       fictional observations with a fixed random seed
+  forecast_input.py       documented public forecast snapshot input
+  features.py             availability-aware feature preparation
+  baseline.py             simple statistical bias correction
+  train.py                independent correction-model training
+  predict.py              frozen-model prediction
+  evaluate.py             matched baseline and candidate scoring
+examples/
+  run_demo.py             one entry point for the complete experiment
+tests/
+  test_pipeline.py        meaningful alignment and leakage checks
+results/
+  comparison.png          regenerated synthetic-example plot
+```
+
+### Completion criteria
+
+- [ ] Write the implementation independently and document the public forecast source, attribution, issue times, and snapshot retrieval.
+- [ ] Generate clearly labeled synthetic observations with a fixed seed and documented assumptions.
+- [ ] Preserve an offline replay option using a permitted, fixed forecast snapshot rather than relying on a changing live response.
+- [ ] Compare the raw forecast, simple statistical correction, and one small learned candidate on chronological splits.
+- [ ] Provide one documented command to regenerate metrics and overlapping plots in a pinned environment.
+- [ ] Check that future observations cannot enter earlier features and that every candidate is scored on the same cases.
+- [ ] Label all generated results as synthetic demonstration evidence and repeat the content review before publication.
 
 ## Ownership and portfolio boundary
 
