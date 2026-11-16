@@ -1,79 +1,68 @@
-# Hybrid Weather Forecasting — Engineering Portfolio
+# Hybrid Weather Forecast Bias Correction
 
-**Problem:** numerical weather forecasts can have local temperature and humidity bias. **Approach:** retain the numerical forecast and learn a small correction rather than predict weather from scratch.
+An independent engineering portfolio: learn local corrections to numerical weather forecasts, then check whether they improve on an unchanged baseline. Includes a runnable synthetic demo and a retrospective public-data temperature benchmark.
 
-**My contribution:** I designed baseline-versus-candidate experiments, implemented variable-specific correction and composition workflows, and evaluated errors through matched observations and overlapping plots. This portfolio now includes a separately written, runnable synthetic example of that engineering approach.
+**My contribution:** I designed baseline/candidate comparisons, implemented correction and evaluation pipelines, and investigated how sensor references, timing and changing weather conditions affect results. [Engineering experience](docs/CASE_STUDY.md).
 
-**Limits:** the results below use fictional data with deliberately learnable bias. They demonstrate implementation and evaluation, not real-weather skill. Company-owned code, weights, measurements, configurations, and internal artifacts are not included.
+[![Tests and numerical verification](https://github.com/Fandi74/weather-forecast-base/actions/workflows/ci.yml/badge.svg?branch=real-weather-evaluation)](https://github.com/Fandi74/weather-forecast-base/actions/workflows/ci.yml?query=branch%3Areal-weather-evaluation)
 
-## What is completed—and what is not
+## Real public-data result
 
-| Work | Status and evidence |
+At a public NOAA airport station, **24-hour-offset temperature MAE decreased from 1.261°C to 1.176°C** on matched 2024 observations. This is one station, one year, and a processed forecast archive—not a prospective deployment or company-system result.
+
+![Archived forecast test errors and paired uncertainty intervals](results/real_world/lead_comparison.png)
+
+| Forecast offset | Processed GFS MAE | Mean-bias MAE | Ridge MAE | Paired MAE improvement, 95% interval |
+| --- | ---: | ---: | ---: | ---: |
+| 24 h | 1.261°C | 1.255°C | 1.176°C | +0.086°C [0.036, 0.140] |
+| 72 h | 1.518°C | 1.509°C | 1.474°C | +0.043°C [−0.012, 0.102] |
+| 168 h | 2.660°C | 2.652°C | 2.574°C | +0.087°C [−0.033, 0.216] |
+
+All offsets use the same **8,175 accepted valid hours** (93.1% of the 2024 hourly grid), producing 24,525 forecast–observation pairs. Archive gaps mean the common test cohort starts **January 25**, not January 1; January and winter evidence are incomplete. Shared observations are not independent extra samples. Training/selection use 2023 only. Positive improvement favors ridge; intervals use paired calendar-week clusters. The longer-offset intervals include zero. Some monthly and seasonal slices worsen: [changing conditions](results/real_world/changing_conditions.png).
+
+Inspect [full scores and subgroup intervals](results/real_world/metrics.json), [paired predictions](results/real_world/predictions.csv), [source provenance](data/public/provenance.json), and [protocol, coverage and limitations](docs/REAL_WORLD_EVALUATION.md).
+
+## What is implemented
+
+| Work | Evidence and boundary |
 | --- | --- |
-| Research engineering experience | Completed in a company setting; described in the [case study](docs/CASE_STUDY.md). Original artifacts and quantitative findings are not published |
-| Independent synthetic implementation | **Runnable here:** generator, statistical baseline, ridge learner, model selection, held-out evaluation, tests, and regenerated plots |
-| Held-out validation of the synthetic demo | **Completed:** 408 test cases per target, separate from fitting and model selection |
-| Public forecast adapter and real-world evaluation | **Future work:** not implemented; no real-weather accuracy claim |
+| Company-context engineering experience | Described only; no original company code, data or weights |
+| Independent synthetic exercise | Temperature/humidity generation, training, held-out scoring and [plots](results/forecast_vs_observation.png); synthetic scores are not real-weather evidence |
+| Public archived-forecast evaluation | Temperature only: NOAA LaGuardia observations, Open-Meteo processed GFS at three offsets; monthly, seasonal and quarterly breakdowns with uncertainty |
+| CI workflow | Automated on this branch, main and PRs: tests plus both numerical checks on Python 3.12/3.15; see the live badge above |
+| Live operation and external transfer | Not demonstrated; no humidity/rainfall real-data claim, multi-station claim or company-system comparison |
 
-## My engineering decisions
-
-- **Designed:** preserve a fixed baseline and compare candidates on identical cases; improve humidity and rainfall separately without silently changing temperature behavior.
-- **Implemented:** observation-reference handling, candidate prediction and composition workflows, and diagnostic plots in the research context. For this independent demo, implemented a small ridge correction learner and reproducible evaluation using the Python standard library.
-- **Evaluated:** target-specific errors, forecast timing, missed rain, sensor-reference choices, and limitations of inspected development observations. The new demo has its own separate synthetic test set.
-- **Learned:** data availability and sensor semantics can matter as much as the learner; development diagnostics must not be presented as blind validation.
-
-## Run and independently verify
+## Reproduce without API keys
 
 From the repository root with Python 3.12 or newer:
 
 ```sh
-# Standard library only: retrain and check the posted models, metrics, and predictions.
-python examples/run_demo.py --verify
 python -m unittest discover -s tests -v
-
-# Regenerate numerical results without plotting dependencies.
-python examples/run_demo.py --no-plots
-
-# Regenerate the graphs as well.
-python -m pip install -r requirements.txt
-python examples/run_demo.py
+python examples/run_demo.py --verify
+python examples/run_real_world.py --verify
 ```
 
-No API keys, company data, or network requests are needed to run the demo. Installing plotting dependencies requires package access. Numerical verification allows a tolerance of 1e-10; image pixels may vary across rendering environments.
+These commands are offline, use the Python standard library, retrain independently, and compare scores and predictions against the frozen artifacts. To regenerate the plots:
 
-## Independently generated results
+```sh
+python -m pip install -r requirements.txt
+python examples/run_demo.py
+python examples/run_real_world.py --plots
+```
 
-Fixed seed **83021**; **2,160 synthetic hourly records**. Chronological splits contain 1,296 training, 408 validation, and 408 test cases, with 24 excluded hours before validation and test. Model fitting uses training only; regularization is selected by validation MAE; test labels are used only after selection.
+Data refresh is a separate, explicit network step. See [public source attribution](data/public/SOURCES.md) and the [real-data protocol](docs/REAL_WORLD_EVALUATION.md). Original archive timing, revisions, missingness and station/grid mismatch limit inference; no reanalysis is presented as a forecast or observation.
 
-| Test MAE—lower is better | Raw synthetic forecast | Mean-bias correction | Ridge correction |
-| --- | ---: | ---: | ---: |
-| Temperature (°C) | 2.454 | 1.286 | **0.608** |
-| Humidity (percentage points) | 7.356 | 4.236 | **1.521** |
-
-These are synthetic-example errors, not company results or an overall accuracy percentage. The generator intentionally creates a correction-friendly relationship; the improvement does not establish transfer to real forecasts or stations.
-
-![Synthetic observations and forecast predictions on the first 96 test hours](results/forecast_vs_observation.png)
-
-Inspect the [all-test error chart](results/test_errors.png), [full metrics](results/metrics.json), [408 paired predictions](results/predictions.csv), [newly trained model parameters](results/models.json), and [artifact checksums](results/checksums.json).
-
-## Architecture and scope
-
-The two work streams below are separate. There is no claim that the historical research diagnostics constitute held-out real-world validation.
+## Implemented independent architecture
 
 ```mermaid
 flowchart LR
-    subgraph R[Research experience - described only]
-        A[Fixed baseline] --> B[Variable-specific candidates] --> C[Development diagnostics]
-    end
-    subgraph D[Independent demo - executable here]
-        E[Synthetic generator] --> F[Training and validation] --> G[Freeze selection] --> H[Synthetic held-out test]
-    end
-    subgraph P[Future work - not implemented]
-        I[Public forecast adapter] -.-> J[Separately designed external evaluation]
-    end
-    style P stroke-dasharray: 6 4
+    A[Public archive pairs or synthetic fixture] --> B[Time split and availability checks]
+    B --> C[Training-only features and correction fits]
+    C --> D[Validation selection and freeze]
+    D --> E[Held-out scoring against raw and mean-bias baselines]
+    E --> F[Plots, subgroup scores and verification]
 ```
 
-The [methodology](docs/METHODOLOGY.md) explains feature engineering, statistical correction, model fitting, leakage safeguards, metric definitions, and the remaining evaluation limits. The [case study](docs/CASE_STUDY.md) provides the longer account of my contributions and lessons.
+This diagram covers the independent implementations, not historical company deployment. Detailed reading: [synthetic methodology](docs/METHODOLOGY.md), [real-data evaluation](docs/REAL_WORLD_EVALUATION.md), [contributions and lessons](docs/CASE_STUDY.md), [proposed GitHub description/topics](docs/GITHUB_METADATA.md).
 
-This example covers temperature and humidity only. Rainfall, observation ingestion, pressure, lux, UV inputs, and production deployment are outside its implemented scope. Company-owned intellectual property remains with its owner; no company assets are transferred into this demonstration. No license file is included.
+Company-owned intellectual property remains with its owner. Public airport metadata are explicitly identified and unrelated to company sites. No company assets or project license file are included; public datasets retain their attribution terms.

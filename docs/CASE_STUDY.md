@@ -50,6 +50,6 @@ No company-derived scores or unpublished quantitative findings are disclosed in 
 
 The work included inspected development observations, assumed observation delays, site-specific model coverage, and experimental rainfall behavior. It does not establish a new blind real-weather benchmark. Sensor wetting was contextual evidence rather than proof of rain, and nearby measurements were not treated as interchangeable ground truth.
 
-The independently written synthetic demo is a separate completed implementation with its own generated data and held-out test. Its results cannot substantiate claims about the company system. A public forecast adapter and external real-weather evaluation are future work.
+The independently written synthetic demo is a separate completed implementation with its own generated data and held-out test. A second independent workflow now evaluates archived public forecasts against a public NOAA station; see the [real-data protocol](REAL_WORLD_EVALUATION.md). Neither workflow substantiates claims about the company system. Live operation, prospective validation and multi-station transfer remain outside the demonstrated scope.
 
 Company-owned intellectual property remains with its owner. See the [repository overview](../README.md) for current scope and the [methodology](METHODOLOGY.md) for the independent experiment.
