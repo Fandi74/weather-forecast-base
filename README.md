@@ -4,6 +4,8 @@ An independent engineering portfolio: learn local corrections to numerical weath
 
 **My contribution:** I designed baseline/candidate comparisons, implemented correction and evaluation pipelines, and investigated how sensor references, timing and changing weather conditions affect results. [Engineering experience](docs/CASE_STUDY.md).
 
+[![Tests and numerical verification](https://github.com/Fandi74/weather-forecast-base/actions/workflows/ci.yml/badge.svg?branch=real-weather-evaluation)](https://github.com/Fandi74/weather-forecast-base/actions/workflows/ci.yml?query=branch%3Areal-weather-evaluation)
+
 ## Real public-data result
 
 At a public NOAA airport station, **24-hour-offset temperature MAE decreased from 1.261°C to 1.176°C** on matched 2024 observations. This is one station, one year, and a processed forecast archive—not a prospective deployment or company-system result.
@@ -27,7 +29,7 @@ Inspect [full scores and subgroup intervals](results/real_world/metrics.json), [
 | Company-context engineering experience | Described only; no original company code, data or weights |
 | Independent synthetic exercise | Temperature/humidity generation, training, held-out scoring and [plots](results/forecast_vs_observation.png); synthetic scores are not real-weather evidence |
 | Public archived-forecast evaluation | Temperature only: NOAA LaGuardia observations, Open-Meteo processed GFS at three offsets; monthly, seasonal and quarterly breakdowns with uncertainty |
-| CI workflow | Prepared for pushes/PRs, with tests and both numerical checks; hosted execution is pending publication |
+| CI workflow | Automated on this branch, main and PRs: tests plus both numerical checks on Python 3.12/3.15; see the live badge above |
 | Live operation and external transfer | Not demonstrated; no humidity/rainfall real-data claim, multi-station claim or company-system comparison |
 
 ## Reproduce without API keys

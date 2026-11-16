@@ -25,4 +25,4 @@ github-actions
 
 The local workflow is `.github/workflows/ci.yml`. It uses read-only repository permissions, pinned official actions, and a Python 3.12/3.15 matrix. It runs tests and both numerical verification commands without API keys, data downloads, plotting dependencies, or company assets.
 
-No hosted run has been triggered because this work has not been pushed. After publication, link the actual Actions run and add its live workflow badge. Do not display a static passing badge or claim a hosted success before a real run completes.
+The branch is published and the first hosted run passed on Python 3.12 and 3.15: https://github.com/Fandi74/weather-forecast-base/actions/runs/43831431067. The README includes a live branch-specific workflow badge. Repository description and topics remain proposed settings; they have not been applied.
