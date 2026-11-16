@@ -32,6 +32,11 @@ def verify(reference, regenerated):
         compare(json.loads((reference / name).read_text(encoding='utf-8')),
                 json.loads((regenerated / name).read_text(encoding='utf-8')), name)
     def predictions(folder):
+        def cell(value):
+            try:
+                return float(value)
+            except ValueError:
+                return value  # Public predictions also contain exact UTC timestamps.
         with (folder / 'predictions.csv').open(encoding='utf-8', newline='') as handle:
-            return [{key: float(value) for key, value in row.items()} for row in csv.DictReader(handle)]
+            return [{key: cell(value) for key, value in row.items()} for row in csv.DictReader(handle)]
     compare(predictions(reference), predictions(regenerated), 'predictions.csv')

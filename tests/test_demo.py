@@ -1,4 +1,6 @@
 import copy
+import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -73,6 +75,22 @@ class DemoTests(unittest.TestCase):
     def test_comparison_rejects_changed_scores(self):
         with self.assertRaises(ValueError):
             compare({'mae': 1.0}, {'mae': 2.0})
+
+    def test_verification_handles_and_checks_timestamp_columns(self):
+        with tempfile.TemporaryDirectory() as folder:
+            first, second = Path(folder) / 'first', Path(folder) / 'second'
+            for path in (first, second):
+                path.mkdir()
+                for name in ('models.json', 'metrics.json'):
+                    (path / name).write_text('{}', encoding='utf-8')
+                (path / 'predictions.csv').write_text('time,value\n2024-01-01T00:00:00+00:00,1.5\n', encoding='utf-8')
+            hashes = {name: hashlib.sha256((first / name).read_bytes()).hexdigest()
+                      for name in ('models.json', 'metrics.json', 'predictions.csv')}
+            (first / 'checksums.json').write_text(json.dumps(hashes), encoding='utf-8')
+            verify(first, second)
+            (second / 'predictions.csv').write_text('time,value\n2024-01-02T00:00:00+00:00,1.5\n', encoding='utf-8')
+            with self.assertRaises(ValueError):
+                verify(first, second)
 
 
 if __name__ == '__main__':

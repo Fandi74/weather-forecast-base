@@ -1,8 +1,10 @@
-# Independent demonstration: methodology and validation
+# Synthetic demonstration: methodology and validation
+
+This page covers the synthetic exercise only. The separate [public archived-forecast evaluation](REAL_WORLD_EVALUATION.md) uses actual NOAA station observations and has its own frozen splits, sources, uncertainty analysis and limitations.
 
 ## Evidence boundary
 
-The implementation in this repository is a new, fully synthetic exercise. It does not reuse research source files, weights, station settings, measured data, or internal artifacts. Both the numerical-forecast-like input and the observation-like target are fictional. There is no public weather API adapter in this version.
+The synthetic implementation is an independent exercise. It does not reuse research source files, weights, station settings, measured data, or internal artifacts. Both the numerical-forecast-like input and the observation-like target in this exercise are fictional. The separate public-data workflow must not be confused with these synthetic inputs or scores.
 
 The held-out test described below has been executed for this synthetic example. It is separate from historical company-context development diagnostics. Real-data transfer and external validation remain future work.
 
